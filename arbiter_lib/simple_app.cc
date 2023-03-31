@@ -97,8 +97,6 @@ void SimpleApp::OnContextInitialized() {
   // platform framework.
   const bool use_views = command_line->HasSwitch("use-views");
 
-  const Arbiter arbiter = new Arbiter();
-
   scheme_handler::RegisterSchemeHandlerFactory();
 
   // SimpleHandler implements browser-level callbacks.

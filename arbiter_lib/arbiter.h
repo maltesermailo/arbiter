@@ -8,9 +8,14 @@
 
 using namespace std;
 
+//Global Instance
+const std::unique_ptr<Arbiter> g_Arbiter = make_unique<Arbiter>(new Arbiter());
+
 class Arbiter {
  public:
   Arbiter();
+
+  static std::unique_ptr<Arbiter> GetInstance();
 
   //Runs the screenshot comparison and generates the gallery. This will be run on the main thread and block CEF. Consider running Arbiter::RunThread()
   void Run();
