@@ -9,7 +9,7 @@
 using namespace std;
 
 //Global Instance
-const std::unique_ptr<Arbiter> g_Arbiter = make_unique<Arbiter>(new Arbiter());
+std::unique_ptr<Arbiter> g_Arbiter;
 
 class Arbiter {
  public:

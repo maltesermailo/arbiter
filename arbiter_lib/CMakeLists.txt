@@ -8,13 +8,14 @@
 
 # cefsimple sources.
 set(ARBITER_SRCS
+  arbiter.cc
+  arbiter.h
   simple_app.cc
   simple_app.h
   simple_handler.cc
   simple_handler.h
   client_scheme_handler.cpp
-  client_scheme_handler.h
-   "arbiter.c")
+  client_scheme_handler.h)
 set(ARBITER_SRCS_LINUX
   cefsimple_linux.cc
   simple_handler_linux.cc
