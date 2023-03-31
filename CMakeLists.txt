@@ -135,6 +135,7 @@ if(NOT EXECUTE_RV STREQUAL "0")
   message(FATAL_ERROR "Execution failed with unexpected result: ${EXECUTE_RV}")
 endif()
 
+set(YAML_BUILD_SHARED_LIBS ON CACHE BOOL "Build YAML Shared Libs")
 
 #
 # Target configuration.
@@ -161,6 +162,7 @@ endif()
 
 # TODO: Include other application targets here.
 
+add_subdirectory(yaml-cpp)
 add_subdirectory(arbiter_lib)
 
 # Display configuration settings.

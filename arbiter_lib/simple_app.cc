@@ -2,8 +2,6 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "tests/cefsimple/simple_app.h"
-
 #include <string>
 
 #include "include/cef_browser.h"
@@ -11,7 +9,9 @@
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
-#include "tests/cefsimple/simple_handler.h"
+#include "simple_handler.h"
+#include "simple_app.h"
+#include "client_scheme_handler.h";
 
 namespace {
 
@@ -79,6 +79,12 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 
 SimpleApp::SimpleApp() {}
 
+void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {
+  // Register "client" as a standard scheme.
+  int options = CEF_SCHEME_OPTION_STANDARD;
+  registrar->AddCustomScheme("client", options);
+}
+
 void SimpleApp::OnContextInitialized() {
   CEF_REQUIRE_UI_THREAD();
 
@@ -89,6 +95,8 @@ void SimpleApp::OnContextInitialized() {
   // via the command-line. Otherwise, create the browser using the native
   // platform framework.
   const bool use_views = command_line->HasSwitch("use-views");
+
+  scheme_handler::RegisterSchemeHandlerFactory();
 
   // SimpleHandler implements browser-level callbacks.
   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
@@ -119,7 +127,7 @@ void SimpleApp::OnContextInitialized() {
 #if defined(OS_WIN)
     // On Windows we need to specify certain flags that will be passed to
     // CreateWindowEx().
-    window_info.SetAsPopup(nullptr, "cefsimple");
+    window_info.SetAsPopup(nullptr, "Arbiter");
 #endif
 
     // Create the first browser window.

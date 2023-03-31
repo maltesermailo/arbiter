@@ -12,7 +12,9 @@ set(ARBITER_SRCS
   simple_app.h
   simple_handler.cc
   simple_handler.h
-  )
+  client_scheme_handler.cpp
+  client_scheme_handler.h
+   "arbiter.c")
 set(ARBITER_SRCS_LINUX
   cefsimple_linux.cc
   simple_handler_linux.cc
@@ -222,8 +224,9 @@ if(OS_WINDOWS)
   # Executable target.
   add_library(${CEF_TARGET} SHARED ${ARBITER_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
+  add_dependencies(${CEF_TARGET} yaml-cpp)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
