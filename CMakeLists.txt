@@ -161,6 +161,8 @@ endif()
 
 # TODO: Include other application targets here.
 
+add_subdirectory(arbiter_lib)
+
 # Display configuration settings.
 PRINT_CEF_CONFIG()
 
