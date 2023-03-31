@@ -12,6 +12,7 @@
 #include "simple_handler.h"
 #include "simple_app.h"
 #include "client_scheme_handler.h";
+#include "arbiter.h"
 
 namespace {
 
@@ -95,6 +96,8 @@ void SimpleApp::OnContextInitialized() {
   // via the command-line. Otherwise, create the browser using the native
   // platform framework.
   const bool use_views = command_line->HasSwitch("use-views");
+
+  const Arbiter arbiter = new Arbiter();
 
   scheme_handler::RegisterSchemeHandlerFactory();
 
