@@ -10,10 +10,14 @@
 set(ARBITER_SRCS
   arbiter.cc
   arbiter.h
+  browser_state.cc
+  browser_state.h
   simple_app.cc
   simple_app.h
   simple_handler.cc
   simple_handler.h
+  simple_render_handler.cc
+  simple_render_handler.h
   client_scheme_handler.cpp
   client_scheme_handler.h)
 set(ARBITER_SRCS_LINUX

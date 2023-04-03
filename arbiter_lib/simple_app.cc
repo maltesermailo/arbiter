@@ -11,7 +11,7 @@
 #include "include/wrapper/cef_helpers.h"
 #include "simple_handler.h"
 #include "simple_app.h"
-#include "client_scheme_handler.h";
+#include "client_scheme_handler.h"
 #include "arbiter.h"
 
 namespace {
@@ -100,8 +100,7 @@ void SimpleApp::OnContextInitialized() {
   scheme_handler::RegisterSchemeHandlerFactory();
 
   //Create browser-global Arbiter instance
-  g_Arbiter = make_unique<Arbiter>(new Arbiter());
-  g_Arbiter->ParseSpiderFile();
+  //g_Arbiter->ParseSpiderFile();
 
   // SimpleHandler implements browser-level callbacks.
   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
@@ -134,6 +133,7 @@ void SimpleApp::OnContextInitialized() {
     // CreateWindowEx().
     window_info.SetAsPopup(nullptr, "Arbiter");
 #endif
+    //window_info.SetAsWindowless(nullptr);
 
     // Create the first browser window.
     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,

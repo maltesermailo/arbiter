@@ -4,45 +4,53 @@
 #define ARBITER_H_
 #include <list>
 #include <iostream>
+#include "include/cef_browser.h"
 #include "yaml-cpp/yaml.h"
+#include <queue>
+#include <mutex>
 
 using namespace std;
 
-//Global Instance
-std::unique_ptr<Arbiter> g_Arbiter;
-
 class Arbiter {
  public:
-  Arbiter();
+  Arbiter() : lastRun(0), currentRun(0) {}
+  ~Arbiter();
 
-  static std::unique_ptr<Arbiter> GetInstance();
+  static std::shared_ptr<Arbiter> GetInstance();
 
   //Runs the screenshot comparison and generates the gallery. This will be run on the main thread and block CEF. Consider running Arbiter::RunThread()
-  void Run();
+  void Run(CefRefPtr<CefBrowser> browser);
   //Adds a URL to the list of URLs
   void AddURL(std::string url);
 
   //Runs the main arbiter thread. Preferably call this over Run()
-  void RunThread();
+  void RunThread(CefRefPtr<CefBrowser> browser);
 
-  //Methods run by Run()
-  // 
   //Parses the spider.yaml file for the sitemap
   void ParseSpiderFile();
 
   //Prepares the data directory with the last run
-  bool PrepareData(std::string dataDir, int lastRun);
+  void PrepareData(std::string dataDir, int lastRun);
 
   //Takes a screenshot in the browser
   void TakeScreenshot(CefRefPtr<CefBrowser> browser);
-
-  //Takes screenshots in every open page
-  void TakeScreenshots();
 
  private:
   std::list<string> urls;
   YAML::Node spiderFile;
 
+  std::string dataDirPath;
+  int lastRun;
+  int currentRun;
+
+  std::queue<string> toBeDone;
+  std::mutex queueMutex;
+
 };
+
+// Global Instance
+namespace {
+std::shared_ptr<Arbiter> g_Arbiter = make_shared<Arbiter>();
+}
 
 #endif

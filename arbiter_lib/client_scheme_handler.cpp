@@ -27,6 +27,8 @@ bool ClientRequestHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefP
 
   if (handled)
     callback->Continue();
+
+  return handled;
 }
 
 void ClientRequestHandler::GetResponseHeaders(CefRefPtr<CefResponse> response,

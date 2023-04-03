@@ -2,17 +2,19 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
-#define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
+#ifndef SIMPLE_HANDLER_H_
+#define SIMPLE_HANDLER_H_
 
 #include "include/cef_client.h"
+#include "browser_state.h"
 
 #include <list>
 
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
-                      public CefLoadHandler {
+                      public CefLoadHandler,
+                      public CefRenderHandler {
  public:
   explicit SimpleHandler(bool use_views);
   ~SimpleHandler();
@@ -45,6 +47,16 @@ class SimpleHandler : public CefClient,
                            const CefString& errorText,
                            const CefString& failedUrl) override;
 
+  // CefRenderHandler methods:
+  virtual void GetViewRect(CefRefPtr<CefBrowser> browser,
+                           CefRect& cefRect) override;
+  virtual void OnPaint(CefRefPtr<CefBrowser> browser,
+                       CefRenderHandler::PaintElementType type,
+                       const CefRenderHandler::RectList& dirtyRects,
+                       const void* buffer,
+                       int width,
+                       int height) override;
+
   // Request that all existing browser windows close.
   void CloseAllBrowsers(bool force_close);
 
@@ -64,6 +76,9 @@ class SimpleHandler : public CefClient,
   // List of existing browser windows. Only accessed on the CEF UI thread.
   typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
   BrowserList browser_list_;
+
+  //List of Arbiter Browser States
+  typedef std::map<int, BrowserState> BrowserState;
 
   bool is_closing_;
 
