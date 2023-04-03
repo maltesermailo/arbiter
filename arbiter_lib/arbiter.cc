@@ -57,16 +57,8 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
 
 }
 
-void RunHelper(CefRefPtr<CefBrowser> browser) {
-  Arbiter::GetInstance()->Run(browser);
-}
-
-void Arbiter::RunThread(CefRefPtr<CefBrowser> browser) {
-  //CefPostTask(TID_FILE_BACKGROUND, base::BindOnce(&RunHelper, browser));
-}
-
 void Arbiter::Log(char* str) {
-  logFile << str << endl;
+  //logFile << str << endl;
   cout << str << endl;
 }
 

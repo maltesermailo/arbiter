@@ -232,6 +232,7 @@ if(OS_WINDOWS)
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
   add_dependencies(${CEF_TARGET} yaml-cpp)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
+  target_compile_options(${CEF_TARGET} PUBLIC "/EHsc")
   target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)

@@ -103,6 +103,38 @@ void SimpleApp::OnContextInitialized() {
   g_Arbiter = make_shared<Arbiter>();
   g_Arbiter->ParseSpiderFile();
 
+  std::string dataDir;
+  std::string lastRunParam;
+
+  dataDir = command_line->GetSwitchValue("data-dir");
+  if (dataDir.empty()) {
+    Arbiter::GetInstance()->Log("No data dir specified with --data-dir. Example: --data-dir=C:\\test\\");
+
+    CefShutdown();
+    std::exit(-1);
+    return;
+  }
+
+  lastRunParam = command_line->GetSwitchValue("last-run");
+  int lastRun = -1;
+  if (lastRunParam.empty()) {
+    Arbiter::GetInstance()->Log("No last run specified with --last-run, generating new screenshots without comparison. Example: --last-run=1");
+  } else {
+    try {
+      //lastRun = stoi(lastRunParam);
+    } catch (const std::invalid_argument& e) {
+      UNREFERENCED_PARAMETER(e);
+      Arbiter::GetInstance()->Log("Last run is not an integer!");
+
+      CefShutdown();
+      std::exit(-1);
+      return;
+    }
+  }
+
+  //Setup Data Directory
+  Arbiter::GetInstance()->PrepareData(dataDir, lastRun);
+
   // SimpleHandler implements browser-level callbacks.
   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
 

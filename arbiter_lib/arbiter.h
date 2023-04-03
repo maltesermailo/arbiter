@@ -27,7 +27,7 @@ class Arbiter {
   void AddURL(std::string url);
 
   //Runs the main arbiter thread. Preferably call this over Run()
-  void RunThread(CefRefPtr<CefBrowser> browser);
+  //void RunThread(CefRefPtr<CefBrowser> browser);
 
   //Parses the spider.yaml file for the sitemap
   void ParseSpiderFile();

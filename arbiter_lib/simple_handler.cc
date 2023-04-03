@@ -70,7 +70,8 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   browser_list_.push_back(browser);
 
   //Start Arbiter Thread on browser
-  Arbiter::GetInstance()->RunThread(browser);
+  CefPostTask(TID_FILE_BACKGROUND,
+              base::BindOnce(&Arbiter::Run, Arbiter::GetInstance(), browser));
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
