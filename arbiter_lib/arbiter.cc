@@ -7,7 +7,7 @@
 Arbiter::~Arbiter() {}
 
 void Arbiter::ParseSpiderFile() {
-
+  Log("Parsing spider file...");
 }
 
 void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
@@ -25,10 +25,10 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
                                          .append(url)
                                          .append(".png");
     if (!std::filesystem::exists(filepath)) {
-      cout << "[Arbiter] "
+      logFile << "[Arbiter] "
            << "Warning! File " << url
            << ".png has no screenshot. A new screenshot will be taken and "
-              "saved but not compared";
+              "saved but not compared" << endl;
     }
   }
 
@@ -63,6 +63,11 @@ void RunHelper(CefRefPtr<CefBrowser> browser) {
 
 void Arbiter::RunThread(CefRefPtr<CefBrowser> browser) {
   //CefPostTask(TID_FILE_BACKGROUND, base::BindOnce(&RunHelper, browser));
+}
+
+void Arbiter::Log(char* str) {
+  logFile << str << endl;
+  cout << str << endl;
 }
 
 std::shared_ptr<Arbiter> Arbiter::GetInstance() {

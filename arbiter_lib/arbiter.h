@@ -4,6 +4,7 @@
 #define ARBITER_H_
 #include <list>
 #include <iostream>
+#include <fstream>
 #include "include/cef_browser.h"
 #include "yaml-cpp/yaml.h"
 #include <queue>
@@ -13,7 +14,9 @@ using namespace std;
 
 class Arbiter {
  public:
-  Arbiter() : lastRun(0), currentRun(0) {}
+  Arbiter() : lastRun(0), currentRun(0) { 
+	  logFile.open("./arbiter.log");
+  }
   ~Arbiter();
 
   static std::shared_ptr<Arbiter> GetInstance();
@@ -35,6 +38,8 @@ class Arbiter {
   //Takes a screenshot in the browser
   void TakeScreenshot(CefRefPtr<CefBrowser> browser);
 
+  void Log(char* str);
+
  private:
   std::list<string> urls;
   YAML::Node spiderFile;
@@ -46,11 +51,13 @@ class Arbiter {
   std::queue<string> toBeDone;
   std::mutex queueMutex;
 
+  std::ofstream logFile;
+
 };
 
 // Global Instance
 namespace {
-std::shared_ptr<Arbiter> g_Arbiter = make_shared<Arbiter>();
+std::shared_ptr<Arbiter> g_Arbiter;
 }
 
 #endif

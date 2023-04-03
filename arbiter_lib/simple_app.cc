@@ -100,7 +100,8 @@ void SimpleApp::OnContextInitialized() {
   scheme_handler::RegisterSchemeHandlerFactory();
 
   //Create browser-global Arbiter instance
-  //g_Arbiter->ParseSpiderFile();
+  g_Arbiter = make_shared<Arbiter>();
+  g_Arbiter->ParseSpiderFile();
 
   // SimpleHandler implements browser-level callbacks.
   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));

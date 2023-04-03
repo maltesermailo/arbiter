@@ -7,65 +7,52 @@
 #
 
 # cefsimple sources.
-set(ARBITER_SRCS
-  arbiter.cc
-  arbiter.h
-  browser_state.cc
-  browser_state.h
-  simple_app.cc
-  simple_app.h
-  simple_handler.cc
-  simple_handler.h
-  simple_render_handler.cc
-  simple_render_handler.h
-  client_scheme_handler.cpp
-  client_scheme_handler.h)
-set(ARBITER_SRCS_LINUX
-  #cefsimple_linux.cc
-  #simple_handler_linux.cc
+set(ARBITER_CLI_SRCS
   )
-set(ARBITER_SRCS_MAC
-  #cefsimple_mac.mm
-  #simple_handler_mac.mm
+set(ARBITER_CLI_SRCS_LINUX
+  cefsimple_linux.cc
   )
-set(ARBITER_SRCS_WINDOWS
-  #cefsimple.rc
-  #cefsimple_win.cc
-  #resource.h
-  simple_handler_win.cc
+set(ARBITER_CLI_SRCS_MAC
+  cefsimple_mac.mm
+  simple_handler_mac.mm
   )
-APPEND_PLATFORM_SOURCES(ARBITER_SRCS)
-source_group(arbiter FILES ${ARBITER_SRCS})
+set(ARBITER_CLI_SRCS_WINDOWS
+  arbiter-cli.rc
+  arbiter-cli-win.cc
+  resource.h
+  )
+APPEND_PLATFORM_SOURCES(ARBITER_CLI_SRCS)
+source_group(cefsimple FILES ${ARBITER_CLI_SRCS})
 
-set(ARBITER_SRCS
-  ${ARBITER_SRCS}
+set(ARBITER_CLI_SRCS
+  ${ARBITER_CLI_SRCS}
   )
 
 # cefsimple helper sources.
-set(ARBITER_HELPER_SRCS_MAC
+set(ARBITER_CLI_HELPER_SRCS_MAC
   process_helper_mac.cc
   )
-APPEND_PLATFORM_SOURCES(ARBITER_HELPER_SRCS)
-source_group(arbiter FILES ${ARBITER_HELPER_SRCS})
+APPEND_PLATFORM_SOURCES(ARBITER_CLI_HELPER_SRCS)
+source_group(cefsimple FILES ${ARBITER_CLI_HELPER_SRCS})
 
 # cefsimple resources.
-set(ARBITER_RESOURCES_MAC_SRCS_MAC
+set(ARBITER_CLI_RESOURCES_MAC_SRCS_MAC
   mac/Info.plist
   mac/cefsimple.icns
   )
-APPEND_PLATFORM_SOURCES(ARBITER_RESOURCES_MAC_SRCS)
-source_group(arbiter\\\\mac FILES ${ARBITER_RESOURCES_MAC_SRCS})
+APPEND_PLATFORM_SOURCES(ARBITER_CLI_RESOURCES_MAC_SRCS)
+source_group(arbiter_cli\\\\mac FILES ${ARBITER_CLI_RESOURCES_MAC_SRCS})
 
-set(ARBITER_RESOURCES_MAC_ENGLISH_LPROJ_SRCS_MAC
+set(ARBITER_CLI_RESOURCES_MAC_ENGLISH_LPROJ_SRCS_MAC
   mac/English.lproj/InfoPlist.strings
   mac/English.lproj/MainMenu.xib
   )
-APPEND_PLATFORM_SOURCES(ARBITER_RESOURCES_MAC_ENGLISH_LPROJ_SRCS)
-source_group(arbiter\\\\mac\\\\English.lproj FILES ${ARBITER_RESOURCES_MAC_ENGLISH_LPROJ_SRCS})
+APPEND_PLATFORM_SOURCES(ARBITER_CLI_RESOURCES_MAC_ENGLISH_LPROJ_SRCS)
+source_group(arbiter_cli\\\\mac\\\\English.lproj FILES ${ARBITER_CLI_RESOURCES_MAC_ENGLISH_LPROJ_SRCS})
 
-set(ARBITER_RESOURCES_SRCS
-  ${ARBITER_RESOURCES_MAC_SRCS}
-  ${ARBITER_RESOURCES_MAC_ENGLISH_LPROJ_SRCS}
+set(ARBITER_CLI_RESOURCES_SRCS
+  ${ARBITER_CLI_RESOURCES_MAC_SRCS}
+  ${ARBITER_CLI_RESOURCES_MAC_ENGLISH_LPROJ_SRCS}
   )
 
 
@@ -74,10 +61,10 @@ set(ARBITER_RESOURCES_SRCS
 #
 
 # Target executable names.
-set(CEF_TARGET "arbiter_lib")
+set(CEF_TARGET "arbiter-cli")
 if(OS_MAC)
-  set(CEF_HELPER_TARGET "arbiter_Helper")
-  set(CEF_HELPER_OUTPUT_NAME "arbiter Helper")
+  set(CEF_HELPER_TARGET "arbiter-cli_Helper")
+  set(CEF_HELPER_OUTPUT_NAME "arbiter-cli Helper")
 else()
   # Logical target used to link the libcef library.
   ADD_LOGICAL_TARGET("libcef_lib" "${CEF_LIB_DEBUG}" "${CEF_LIB_RELEASE}")
@@ -93,10 +80,11 @@ SET_CEF_TARGET_OUT_DIR()
 
 if(OS_LINUX)
   # Executable target.
-  add_library(${CEF_TARGET} SHARED ${ARBITER_SRCS})
+  add_executable(${CEF_TARGET} ${ARBITER_CLI_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  add_dependencies(${CEF_TARGET} arbiter_lib)
+  target_link_libraries(${CEF_TARGET} arbiter_lib)
 
   # Set rpath so that libraries can be placed next to the executable.
   set_target_properties(${CEF_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
@@ -143,10 +131,11 @@ if(OS_MAC)
   endif()
 
   # Main app bundle target.
-  add_executable(${CEF_TARGET} MACOSX_BUNDLE ${ARBITER_RESOURCES_SRCS} ${ARBITER_SRCS})
+  add_executable(${CEF_TARGET} MACOSX_BUNDLE ${ARBITER_CLI_RESOURCES_SRCS} ${CEFSIMPLE_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${CEF_TARGET} libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  add_dependencies(${CEF_TARGET} arbiter_lib)
+  target_link_libraries(${CEF_TARGET} arbiter_lib)
   set_target_properties(${CEF_TARGET} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac/Info.plist
     )
@@ -185,7 +174,7 @@ if(OS_MAC)
     file(WRITE ${_helper_info_plist} ${_plist_contents})
 
     # Create Helper executable target.
-    add_executable(${_helper_target} MACOSX_BUNDLE ${ARBITER_HELPER_SRCS})
+    add_executable(${_helper_target} MACOSX_BUNDLE ${ARBITER_CLI_HELPER_SRCS})
     SET_EXECUTABLE_TARGET_PROPERTIES(${_helper_target})
     add_dependencies(${_helper_target} libcef_dll_wrapper)
     target_link_libraries(${_helper_target} libcef_dll_wrapper ${CEF_STANDARD_LIBS})
@@ -226,24 +215,24 @@ endif()
 #
 
 if(OS_WINDOWS)
-  # Library target.
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-  add_library(${CEF_TARGET} ${ARBITER_SRCS})
+  # Executable target.
+  add_executable(${CEF_TARGET} ${ARBITER_CLI_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  add_dependencies(${CEF_TARGET} yaml-cpp)
+  add_dependencies(${CEF_TARGET} arbiter_lib)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} PRIVATE arbiter_lib)
+  add_compile_definitions(CONSOLE_APP)
 
-  if(USE_SANDBOX)
+  #if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
-    ADD_LOGICAL_TARGET("cef_sandbox_lib" "${CEF_SANDBOX_LIB_DEBUG}" "${CEF_SANDBOX_LIB_RELEASE}")
-    target_link_libraries(${CEF_TARGET} cef_sandbox_lib ${CEF_SANDBOX_STANDARD_LIBS})
-  endif()
+    #ADD_LOGICAL_TARGET("cef_sandbox_lib" "${CEF_SANDBOX_LIB_DEBUG}" "${CEF_SANDBOX_LIB_RELEASE}")
+    #target_link_libraries(${CEF_TARGET} cef_sandbox_lib ${CEF_SANDBOX_STANDARD_LIBS})
+  #endif()
 
   # Add the custom manifest files to the executable.
-  #ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${CEF_TARGET}" "exe")
+  ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${CEF_TARGET}" "exe")
 
   # Copy binary and resource files to the target output directory.
-  #COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
-  #COPY_FILES("${CEF_TARGET}" "${CEF_RESOURCE_FILES}" "${CEF_RESOURCE_DIR}" "${CEF_TARGET_OUT_DIR}")
+  COPY_FILES("${CEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
+  COPY_FILES("${CEF_TARGET}" "${CEF_RESOURCE_FILES}" "${CEF_RESOURCE_DIR}" "${CEF_TARGET_OUT_DIR}")
 endif()
