@@ -12,6 +12,7 @@ void RegisterSchemeHandlerFactory();
 }  // namespace scheme_handler
 
 const char UI_FILE_NAME[] = "ui.html";
+const char NULL_FILE_NAME[] = "null";
 
 class ClientRequestHandler : public CefResourceHandler {
      public:

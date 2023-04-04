@@ -105,6 +105,7 @@ void SimpleApp::OnContextInitialized() {
 
   std::string dataDir;
   std::string lastRunParam;
+  std::string threadsParam;
 
   dataDir = command_line->GetSwitchValue("data-dir");
   if (dataDir.empty()) {
@@ -132,45 +133,70 @@ void SimpleApp::OnContextInitialized() {
     }
   }
 
+  threadsParam = command_line->GetSwitchValue("threads");
+  int threads =
+      std::thread::hardware_concurrency();
+  if (threads <= 0)
+    threads = 4;
+
+  if (threadsParam.empty()) {
+    Arbiter::GetInstance()->Log(
+        "No thread count specified, using 4");
+  } else {
+    try {
+      threads = stoi(threadsParam);
+    } catch (const std::invalid_argument& e) {
+      UNREFERENCED_PARAMETER(e);
+      Arbiter::GetInstance()->Log("Threads is not an integer!");
+
+      CefShutdown();
+      std::exit(-1);
+      return;
+    }
+  }
+
   //Setup Data Directory
-  Arbiter::GetInstance()->PrepareData(dataDir, lastRun);
+  try {
+    Arbiter::GetInstance()->PrepareData(dataDir, lastRun);
+  } catch (const std::string& e) {
+    Arbiter::GetInstance()->Log(e.c_str());
+  }
 
   // SimpleHandler implements browser-level callbacks.
   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
 
   // Specify CEF browser settings here.
   CefBrowserSettings browser_settings;
+  browser_settings.javascript = STATE_ENABLED;
+  browser_settings.local_storage = STATE_DISABLED;
+  browser_settings.windowless_frame_rate = 1;
+  CefString(&browser_settings.accept_language_list).FromString("de-DE,de");
 
-  std::string url;
+  for (int i = 0; i < threads; i++) {
+    if (use_views) {
+      // Create the BrowserView.
+      CefRefPtr<CefBrowserView> browser_view =
+          CefBrowserView::CreateBrowserView(handler, "client://ui/null",
+                                            browser_settings, nullptr, nullptr,
+                                            new SimpleBrowserViewDelegate());
 
-  // Check if a "--url=" value was provided via the command-line. If so, use
-  // that instead of the default URL.
-  url = command_line->GetSwitchValue("url");
-  if (url.empty())
-    url = "http://www.google.com";
-
-  if (use_views) {
-    // Create the BrowserView.
-    CefRefPtr<CefBrowserView> browser_view = CefBrowserView::CreateBrowserView(
-        handler, url, browser_settings, nullptr, nullptr,
-        new SimpleBrowserViewDelegate());
-
-    // Create the Window. It will show itself after creation.
-    CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
-  } else {
-    // Information used when creating the native window.
-    CefWindowInfo window_info;
+      // Create the Window. It will show itself after creation.
+      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
+    } else {
+      // Information used when creating the native window.
+      CefWindowInfo window_info;
 
 #if defined(OS_WIN)
-    // On Windows we need to specify certain flags that will be passed to
-    // CreateWindowEx().
-    window_info.SetAsPopup(nullptr, "Arbiter");
+      // On Windows we need to specify certain flags that will be passed to
+      // CreateWindowEx().
+      window_info.SetAsPopup(nullptr, "Arbiter");
 #endif
-    //window_info.SetAsWindowless(nullptr);
+      window_info.SetAsWindowless(nullptr);
 
-    // Create the first browser window.
-    CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,
-                                  nullptr, nullptr);
+      // Create the browser window.
+      CefBrowserHost::CreateBrowser(window_info, handler, "client://ui/null",
+                                    browser_settings, nullptr, nullptr);
+    }
   }
 }
 

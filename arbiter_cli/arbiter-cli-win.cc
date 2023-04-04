@@ -43,6 +43,14 @@ int main(int argc, char** argv) {
   // Enable High-DPI support on Windows 7 or newer.
   CefEnableHighDPISupport();
 
+  //Wait for Debugger
+#ifdef DEBUG
+  while (!IsDebuggerPresent()) {
+    DebugBreak();
+    ::Sleep(100);
+  }
+#endif  // DEBUG
+
   void* sandbox_info = nullptr;
 
 #if defined(CEF_USE_SANDBOX)

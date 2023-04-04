@@ -57,7 +57,7 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
 
 }
 
-void Arbiter::Log(char* str) {
+void Arbiter::Log(const char* str) {
   //logFile << str << endl;
   cout << str << endl;
 }

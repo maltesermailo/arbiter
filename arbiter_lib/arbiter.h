@@ -38,7 +38,7 @@ class Arbiter {
   //Takes a screenshot in the browser
   void TakeScreenshot(CefRefPtr<CefBrowser> browser);
 
-  void Log(char* str);
+  void Log(const char* str);
 
  private:
   std::list<string> urls;

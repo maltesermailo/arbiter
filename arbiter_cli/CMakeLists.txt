@@ -223,6 +223,12 @@ if(OS_WINDOWS)
   target_link_libraries(${CEF_TARGET} PRIVATE arbiter_lib)
   add_compile_definitions(CONSOLE_APP)
 
+  target_compile_definitions(${CEF_TARGET}
+    PRIVATE
+        # If the debug configuration pass the DEBUG define to the compiler 
+        $<$<CONFIG:Debug>:-DDEBUG>>
+   )
+
   #if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
     #ADD_LOGICAL_TARGET("cef_sandbox_lib" "${CEF_SANDBOX_LIB_DEBUG}" "${CEF_SANDBOX_LIB_RELEASE}")
