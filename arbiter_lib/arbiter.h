@@ -9,8 +9,11 @@
 #include "yaml-cpp/yaml.h"
 #include <queue>
 #include <mutex>
+#include "browser_state.h"
 
 using namespace std;
+
+typedef std::map<int, shared_ptr<BrowserState>> BrowserStateList;
 
 class Arbiter {
  public:
@@ -21,7 +24,7 @@ class Arbiter {
 
   static std::shared_ptr<Arbiter> GetInstance();
 
-  //Runs the screenshot comparison and generates the gallery. This will be run on the main thread and block CEF. Consider running Arbiter::RunThread()
+  //Runs the screenshot comparison and generates the gallery. This will be run on the main thread and block CEF. Consider running in separate thread
   void Run(CefRefPtr<CefBrowser> browser);
   //Adds a URL to the list of URLs
   void AddURL(std::string url);
@@ -36,9 +39,12 @@ class Arbiter {
   void PrepareData(std::string dataDir, int lastRun);
 
   //Takes a screenshot in the browser
-  void TakeScreenshot(CefRefPtr<CefBrowser> browser);
+  void TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<BrowserState> state);
 
   void Log(const char* str);
+  void Log(const std::string& str);
+
+  BrowserStateList getStateList();
 
  private:
   std::list<string> urls;
@@ -50,6 +56,9 @@ class Arbiter {
 
   std::queue<string> toBeDone;
   std::mutex queueMutex;
+
+  // List of Arbiter Browser States
+  BrowserStateList browserStates;
 
   std::ofstream logFile;
 

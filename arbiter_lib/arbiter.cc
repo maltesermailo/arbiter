@@ -45,10 +45,24 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
   }
 }
 
-void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser) {
+void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<BrowserState> state) {
   CefRefPtr<CefProcessMessage> message =
       CefProcessMessage::Create("GET_DIMENSIONS");
   browser->GetMainFrame()->SendProcessMessage(PID_RENDERER, message);
+
+  state->notify.acquire();
+
+  //Wait till loading is finished
+  std::this_thread::sleep_for(std::chrono::seconds(20));
+
+  //Resize browser and start paint process
+  browser->GetHost()->WasResized();
+
+  while (!state->IsScreenshotDone()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    //CONVERT TO PNG
+  }
 }
 
 void Arbiter::AddURL(std::string url) {
@@ -56,14 +70,76 @@ void Arbiter::AddURL(std::string url) {
 }
 
 void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
+  std::shared_ptr<BrowserState> state = make_shared<BrowserState>(browser->GetIdentifier());
+  state
+      ->SetScreenshotDone(false);
+  state
+      ->SetDimensions(1920, 8640);
+
+  this->browserStates[browser->GetIdentifier()] = state;
+
+  Arbiter::GetInstance()->Log(
+      std::format("[Arbiter] [%d] Starting...", browser->GetIdentifier()));
+
   while (!this->toBeDone.empty()) {
-    //DO WORK
+    std::string url;
+
+    Arbiter::GetInstance()->Log(
+        std::format("[Arbiter] [%d] Getting next url", browser->GetIdentifier()));
+
+    try {
+      //Acquire queue lock
+      this->queueMutex.lock();
+
+      //Check for remaining urls
+      if (!this->toBeDone.empty()) {
+        std::string url = this->toBeDone.front();
+
+        this->toBeDone.pop();
+      }
+
+      this->queueMutex.unlock();
+    } catch (...) {
+      this->queueMutex.unlock();
+    }
+
+    //If url is empty, toBeDone is empty
+    if (!url.empty()) {
+      Arbiter::GetInstance()->Log(
+          std::format("[Arbiter] [%d] Loading url %s...", browser->GetIdentifier(), url));
+      browser->GetMainFrame()->LoadURL(url);
+
+      state->notifyLoad.acquire();
+
+      //If page didnt load, continue with next one, else take screenshot
+      if (state->_error) {
+        Arbiter::GetInstance()->Log(std::format(
+            "[Arbiter] [%d] Warning: Page %s didn't load properly! Skipping...", browser->GetIdentifier(), url));
+        continue;
+      }
+
+      Arbiter::GetInstance()->Log(std::format(
+          "[Arbiter] [%d] Creating screenshot for %s...", browser->GetIdentifier(), url));
+
+      //Take screenshot
+      this->TakeScreenshot(browser, state);
+    }
   }
 }
 
 void Arbiter::Log(const char* str) {
   //logFile << str << endl;
   cout << str << endl;
+}
+
+void Arbiter::Log(const std::string& str) {
+  // logFile << str << endl;
+  cout << str << endl;
+}
+
+
+BrowserStateList Arbiter::getStateList() {
+  return this->browserStates;
 }
 
 std::shared_ptr<Arbiter> Arbiter::GetInstance() {

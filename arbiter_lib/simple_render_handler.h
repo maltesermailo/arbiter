@@ -13,7 +13,7 @@ class SimpleRenderHandler : public CefRenderProcessHandler {
   // Provide access to the single global instance of this object.
   static SimpleRenderHandler* GetInstance();
 
-  bool SimpleRenderHandler::OnProcessMessageReceived(
+  bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
       CefProcessId source_process,

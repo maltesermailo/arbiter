@@ -15,6 +15,7 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
 #include "arbiter.h"
+#include <format>
 
 namespace {
 
@@ -116,12 +117,28 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
   CEF_REQUIRE_UI_THREAD();
 
   // Allow Chrome to show the error page.
-  if (IsChromeRuntimeEnabled())
-    return;
+  //if (IsChromeRuntimeEnabled())
+  //  return;
 
   // Don't display an error for downloaded files.
   if (errorCode == ERR_ABORTED)
     return;
+
+  if (failedUrl.ToString().find("client://") == std::string::npos && frame->IsMain()) {
+    BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+    if (stateList.contains(browser->GetIdentifier())) {
+      std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+      state->_error = true;
+
+      state->notifyLoad.release();
+    } else {
+      Arbiter::GetInstance()->Log(std::format(
+          std::string(
+              "Unknown instance %d detected. Instance won't continue loading!"),
+          browser->GetIdentifier()).c_str());
+    }
+      return;
+  }
 
   // Display a load error message using a data: URI.
   std::stringstream ss;
@@ -131,6 +148,48 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
      << " (" << errorCode << ").</h2></body></html>";
 
   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+}
+
+void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    int httpStatusCode) {
+  if (frame->IsMain()) {
+      BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+      if (stateList.contains(browser->GetIdentifier())) {
+          std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+          state->_error = false;
+
+          state->notifyLoad.release();
+      } else {
+          Arbiter::GetInstance()->Log(
+              std::format(std::string("Unknown instance %d detected. Instance "
+                                      "won't continue loading!"),
+                          browser->GetIdentifier())
+                  .c_str());
+      }
+      return;
+  }
+}
+
+bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefProcessId source_process,
+    CefRefPtr<CefProcessMessage> message) {
+  if (frame->IsMain()) {
+      BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+      if (stateList.contains(browser->GetIdentifier())) {
+          std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+
+          state->notify.release();
+      } else {
+          Arbiter::GetInstance()->Log(
+              std::format(std::string("Unknown instance %d detected. Instance "
+                                      "won't continue loading!"),
+                          browser->GetIdentifier())
+                  .c_str());
+      }
+      return;
+  }
 }
 
 void SimpleHandler::CloseAllBrowsers(bool force_close) {
@@ -151,8 +210,17 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
 
 void SimpleHandler::GetViewRect(CefRefPtr<CefBrowser> browser,
                                 CefRect& cefRect) {
-  cefRect.width = 1920;
-  cefRect.height = 8640;
+
+    BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+  if (stateList.contains(browser->GetIdentifier())) {
+    std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+    
+    cefRect.width = state->GetWidth();
+    cefRect.height = state->GetHeight();
+  } else {
+    cefRect.width = 1920;
+    cefRect.height = 8640;
+  }
 }
 
 void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,

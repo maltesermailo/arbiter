@@ -30,6 +30,10 @@ class SimpleHandler : public CefClient,
     return this;
   }
   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                CefProcessId source_process,
+                                CefRefPtr<CefProcessMessage> message) override;
 
   // CefDisplayHandler methods:
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -46,6 +50,9 @@ class SimpleHandler : public CefClient,
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) override;
+  virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefFrame> frame,
+                         int httpStatusCode) override;
 
   // CefRenderHandler methods:
   virtual void GetViewRect(CefRefPtr<CefBrowser> browser,
@@ -76,9 +83,6 @@ class SimpleHandler : public CefClient,
   // List of existing browser windows. Only accessed on the CEF UI thread.
   typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
   BrowserList browser_list_;
-
-  //List of Arbiter Browser States
-  typedef std::map<int, BrowserState> BrowserState;
 
   bool is_closing_;
 

@@ -6,6 +6,8 @@
 # Source files.
 #
 
+set(CMAKE_CXX_STANDARD 20)
+
 # cefsimple sources.
 set(ARBITER_SRCS
   arbiter.cc
