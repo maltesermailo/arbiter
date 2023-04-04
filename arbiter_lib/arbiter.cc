@@ -46,15 +46,19 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
 }
 
 void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser) {
-  //browser->GetMainFrame()->Exe
+  CefRefPtr<CefProcessMessage> message =
+      CefProcessMessage::Create("GET_DIMENSIONS");
+  browser->GetMainFrame()->SendProcessMessage(PID_RENDERER, message);
 }
 
 void Arbiter::AddURL(std::string url) {
-
+  this->urls.push_back(url);
 }
 
 void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
-
+  while (!this->toBeDone.empty()) {
+    //DO WORK
+  }
 }
 
 void Arbiter::Log(const char* str) {
