@@ -229,7 +229,14 @@ void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,
     const void* buffer,
     int width,
     int height) {
+  size_t length = width * height * 4;
 
+  BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+  if (stateList.contains(browser->GetIdentifier())) {
+    std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+
+    state->SetBuffer(buffer, length, width, height);
+  }
 }
 
 // static

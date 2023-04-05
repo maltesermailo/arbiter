@@ -60,8 +60,49 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
 
   while (!state->IsScreenshotDone()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
-    //CONVERT TO PNG
+  size_t length;
+  int bufferWidth;
+  int bufferHeight;
+  uint8_t* buffer =
+      (uint8_t*)state->GetBuffer(length, bufferWidth, bufferHeight);
+
+  int supposedLength = state->GetWidth() * state->GetHeight() * 4;
+
+  if (length > 0) {
+    if (bufferWidth != state->GetWidth() || bufferHeight != state->GetHeight()) {
+      this->Log(std::format(
+          "[Arbiter] [%d] Screenshot of url %s hasn't got proper width and "
+          "height. Should be: %d x %d pixels, Is: %d x %d pixels",
+          browser->GetIdentifier(), state->currentUrl, bufferWidth,
+          bufferHeight, state->GetWidth(), state->GetHeight()));
+    }
+
+    if (supposedLength != length) {
+      this->Log(std::format(
+          "[Arbiter] [%d] Screenshot of url %s hasn't got proper size. Should be: %d bytes, Is: %d bytes",
+          browser->GetIdentifier(), state->currentUrl, supposedLength, length));
+    }
+
+    this->Log(std::format(
+        "[Arbiter] [%d] Converting from BGRA to RGBA and saving to png file...",
+        browser->GetIdentifier(), state->currentUrl, supposedLength, length));
+
+    std::unique_ptr<uint8_t[]> output_buffer =
+        make_unique<uint8_t[]>(length);
+    uint8_t* raw = output_buffer.get();
+
+    for (int x = 0; x < bufferWidth; x++) {
+      for (int y = 0; y < bufferHeight; y++) {
+        uint8_t blue = *(buffer++);
+        uint8_t green = *(buffer++);
+        uint8_t red = *(buffer++);
+        uint8_t alpha = *(buffer++);
+
+        //INPUT INTO PNG LIBRARY
+      }
+    }
   }
 }
 
@@ -108,6 +149,8 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
       Arbiter::GetInstance()->Log(
           std::format("[Arbiter] [%d] Loading url %s...", browser->GetIdentifier(), url));
       browser->GetMainFrame()->LoadURL(url);
+
+      state->currentUrl = url;
 
       state->notifyLoad.acquire();
 

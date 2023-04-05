@@ -25,13 +25,15 @@ void BrowserState::SetDimensions(int widthIn, int heightIn) {
   this->height = heightIn;
 }
 
-void BrowserState::SetBuffer(void* data, int length) {
+void BrowserState::SetBuffer(const void* data, size_t length, int width, int height) {
   this->buffer = data;
   this->bufferLength = length;
 }
 
-void* BrowserState::GetBuffer(int& length) {
+const void* BrowserState::GetBuffer(size_t& length, int& width, int& height) {
   length = bufferLength;
+  width = bufferWidth;
+  height = bufferHeight;
 
   return this->buffer;
 }
