@@ -14,7 +14,9 @@ class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
                       public CefLoadHandler,
-                      public CefRenderHandler {
+                      public CefRenderHandler,
+                      public CefRequestHandler,
+                      public CefResourceRequestHandler {
  public:
   explicit SimpleHandler(bool use_views);
   ~SimpleHandler();
@@ -63,6 +65,24 @@ class SimpleHandler : public CefClient,
                        const void* buffer,
                        int width,
                        int height) override;
+
+  //CefRequestHandler methods:
+  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request,
+      bool is_navigation,
+      bool is_download,
+      const CefString& request_initiator,
+      bool& disable_default_handling) {
+    return this;
+  }
+
+  //CefResourceRequestHandler methods:
+  CefRefPtr<CefResourceHandler> GetResourceHandler(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request) override;
 
   // Request that all existing browser windows close.
   void CloseAllBrowsers(bool force_close);

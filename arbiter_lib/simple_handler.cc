@@ -192,6 +192,26 @@ bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
   }
 }
 
+CefRefPtr<CefResourceHandler> SimpleHandler::GetResourceHandler(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request) {
+  BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
+  if (stateList.contains(browser->GetIdentifier())) {
+      std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
+
+      state->lastLoadTimeMillis =
+          std::chrono::system_clock::now().time_since_epoch().count();
+  } else {
+      Arbiter::GetInstance()->Log(
+          std::format(std::string("Unknown instance %d detected. Instance "
+                                  "will have arbitrary state!"),
+                      browser->GetIdentifier())
+              .c_str());
+  }
+  return;
+}
+
 void SimpleHandler::CloseAllBrowsers(bool force_close) {
   if (!CefCurrentlyOn(TID_UI)) {
     // Execute on the UI thread.

@@ -28,6 +28,9 @@ class BrowserState {
 
   bool _error = false;
 
+  // Represents the last time a resource has been loaded
+  unsigned long lastLoadTimeMillis = -1;
+
  private:
   int _browser_id;
   bool _screenshotDone = false;

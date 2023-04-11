@@ -52,7 +52,12 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
 
   state->notify.acquire();
 
-  //Wait till loading is finished
+  //If last load timer is higher than 5 seconds, dont continue and wait a second, a picture or JS script might have not finished loading
+  while ((std::chrono::system_clock::now().time_since_epoch().count() - state->lastLoadTimeMillis) < 5000) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+
+  // DEBUG: Wait till loading is finished
   std::this_thread::sleep_for(std::chrono::seconds(20));
 
   //Resize browser and start paint process
