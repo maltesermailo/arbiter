@@ -85,9 +85,10 @@ else()
   ADD_LOGICAL_TARGET("libcef_lib" "${CEF_LIB_DEBUG}" "${CEF_LIB_RELEASE}")
 endif()
 
+include_directories("../yaml-cpp/include")
+
 # Determine the target output directory.
 SET_CEF_TARGET_OUT_DIR()
-
 
 #
 # Linux configuration.
@@ -232,10 +233,11 @@ if(OS_WINDOWS)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   add_library(${CEF_TARGET} ${ARBITER_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  add_dependencies(${CEF_TARGET} yaml-cpp)
+  add_dependencies(${CEF_TARGET} yaml-cpp::yaml-cpp)
+  add_dependencies(${CEF_TARGET} png_static)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   target_compile_options(${CEF_TARGET} PUBLIC "/EHsc")
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp png_static ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

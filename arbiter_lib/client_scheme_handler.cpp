@@ -10,7 +10,9 @@ bool ClientRequestHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefP
   std::string url = request->GetURL();
 
   if (strstr(url.c_str(), UI_FILE_NAME) != nullptr) {
-    std::ifstream file(strcat("./html/", UI_FILE_NAME));
+    std::string path;
+    path.append("./html").append(UI_FILE_NAME);
+    std::ifstream file(path);
     
     if (file.good()) {
         std::stringstream stream;

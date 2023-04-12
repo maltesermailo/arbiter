@@ -133,9 +133,8 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
       state->notifyLoad.release();
     } else {
       Arbiter::GetInstance()->Log(std::format(
-          std::string(
-              "Unknown instance %d detected. Instance won't continue loading!"),
-          browser->GetIdentifier()).c_str());
+              "Unknown instance %d detected. Instance won't continue loading!",
+          browser->GetIdentifier()));
     }
       return;
   }
@@ -162,8 +161,8 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
           state->notifyLoad.release();
       } else {
           Arbiter::GetInstance()->Log(
-              std::format(std::string("Unknown instance %d detected. Instance "
-                                      "won't continue loading!"),
+              std::format("Unknown instance %d detected. Instance "
+                                      "won't continue loading!",
                           browser->GetIdentifier())
                   .c_str());
       }
@@ -183,13 +182,15 @@ bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
           state->notify.release();
       } else {
           Arbiter::GetInstance()->Log(
-              std::format(std::string("Unknown instance %d detected. Instance "
-                                      "won't continue loading!"),
+              std::format("Unknown instance %d detected. Instance "
+                                      "won't continue loading!",
                           browser->GetIdentifier())
                   .c_str());
       }
-      return;
+      return true;
   }
+
+  return false;
 }
 
 CefRefPtr<CefResourceHandler> SimpleHandler::GetResourceHandler(
@@ -204,12 +205,12 @@ CefRefPtr<CefResourceHandler> SimpleHandler::GetResourceHandler(
           std::chrono::system_clock::now().time_since_epoch().count();
   } else {
       Arbiter::GetInstance()->Log(
-          std::format(std::string("Unknown instance %d detected. Instance "
-                                  "will have arbitrary state!"),
+          std::format("Unknown instance %d detected. Instance "
+                                  "will have arbitrary state!",
                       browser->GetIdentifier())
               .c_str());
   }
-  return;
+  return nullptr;
 }
 
 void SimpleHandler::CloseAllBrowsers(bool force_close) {

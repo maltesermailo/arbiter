@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include "include/cef_browser.h"
+#include "yaml-cpp/node/convert.h"
 #include "yaml-cpp/yaml.h"
 #include <queue>
 #include <mutex>

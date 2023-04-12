@@ -2,12 +2,29 @@
 #include "include/cef_app.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
+//#include "libpng/png.h"
 #include <filesystem>
 
 Arbiter::~Arbiter() {}
 
 void Arbiter::ParseSpiderFile() {
   Log("Parsing spider file...");
+
+  this->spiderFile = YAML::LoadFile("spider.yaml");
+
+  YAML::Node pathsNode = this->spiderFile["paths"];
+  YAML::const_iterator iter;
+
+  Log(std::format(
+      "[Arbiter] Loading %d urls...",
+      pathsNode.size()));
+
+  for (iter = pathsNode.begin(); iter != pathsNode.end(); ++iter) {
+    std::string url = iter->as<std::string>();
+
+    Log(std::format("[Arbiter] Adding %s...", url));
+    this->AddURL(url);
+  }
 }
 
 void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
@@ -94,9 +111,7 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
         "[Arbiter] [%d] Converting from BGRA to RGBA and saving to png file...",
         browser->GetIdentifier(), state->currentUrl, supposedLength, length));
 
-    std::unique_ptr<uint8_t[]> output_buffer =
-        make_unique<uint8_t[]>(length);
-    uint8_t* raw = output_buffer.get();
+
 
     for (int x = 0; x < bufferWidth; x++) {
       for (int y = 0; y < bufferHeight; y++) {
@@ -139,7 +154,7 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
 
       //Check for remaining urls
       if (!this->toBeDone.empty()) {
-        std::string url = this->toBeDone.front();
+        url = this->toBeDone.front();
 
         this->toBeDone.pop();
       }

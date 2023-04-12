@@ -162,6 +162,7 @@ endif()
 
 # TODO: Include other application targets here.
 
+add_subdirectory(libpng)
 add_subdirectory(yaml-cpp)
 add_subdirectory(arbiter_lib)
 add_subdirectory(arbiter_cli)
