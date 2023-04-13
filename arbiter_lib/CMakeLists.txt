@@ -6,8 +6,6 @@
 # Source files.
 #
 
-set(CMAKE_CXX_STANDARD 20)
-
 # cefsimple sources.
 set(ARBITER_SRCS
   arbiter.cc
@@ -231,7 +229,7 @@ endif()
 if(OS_WINDOWS)
   # Library target.
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-  add_library(${CEF_TARGET} ${ARBITER_SRCS})
+  add_library(${CEF_TARGET} SHARED ${ARBITER_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
   add_dependencies(${CEF_TARGET} yaml-cpp::yaml-cpp)
   add_dependencies(${CEF_TARGET} png_static)

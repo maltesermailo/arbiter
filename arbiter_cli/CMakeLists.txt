@@ -219,8 +219,12 @@ if(OS_WINDOWS)
   add_executable(${CEF_TARGET} ${ARBITER_CLI_SRCS})
   add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
   add_dependencies(${CEF_TARGET} arbiter_lib)
+  add_dependencies(${CEF_TARGET} yaml-cpp::yaml-cpp)
+  add_dependencies(${CEF_TARGET} png_static)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  target_link_libraries(${CEF_TARGET} PRIVATE arbiter_lib)
+  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp::yaml-cpp png_static arbiter_lib)
+  set_property(TARGET ${CEF_TARGET} PROPERTY
+             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   add_compile_definitions(CONSOLE_APP)
 
   target_compile_definitions(${CEF_TARGET}
@@ -228,6 +232,9 @@ if(OS_WINDOWS)
         # If the debug configuration pass the DEBUG define to the compiler 
         $<$<CONFIG:Debug>:-DDEBUG>>
    )
+
+   target_compile_options(${CEF_TARGET} PRIVATE /wd4251)
+
 
   #if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

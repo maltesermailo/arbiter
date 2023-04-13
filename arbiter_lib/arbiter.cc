@@ -35,11 +35,15 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
   }
 
   for (auto const& url : this->urls) {
+    //Sanitized url for filesystem since / are not allowed
+    std::string urlSanitized = url;
+    urlSanitized.replace(url.begin(), url.end(), '/', '_');
+
     std::filesystem::path filepath = std::string(dataDirIn)
                                          .append("/")
                                          .append(std::to_string(lastRun))
                                          .append("/")
-                                         .append(url)
+                                         .append(urlSanitized)
                                          .append(".png");
     if (!std::filesystem::exists(filepath)) {
       logFile << "[Arbiter] "
@@ -131,13 +135,21 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
       }
     }
 
+    // Sanitized url for filesystem since / are not allowed
+    std::string urlSanitized = state->currentUrl;
+    urlSanitized.replace(urlSanitized.begin(), urlSanitized.end(), '/', '_');
+
     const char* filepath = std::string(this->dataDirPath)
                                          .append("/")
                                          .append(std::to_string(this->currentRun))
                                          .append("/")
-                                         .append(state->currentUrl)
+                                         .append(urlSanitized)
                                          .append(".png").c_str();
     png_FILE_p fp = fopen(filepath, "w");
+
+    this->Log(std::format(
+        "[Arbiter] [%d] Writing to path: %s", browser->GetIdentifier(),
+        filepath));
 
     png_structp png_ptr;
     png_infop info_ptr;
@@ -153,8 +165,9 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
     if (!info_ptr)
       throw "Can't create png info context, out of memory!";
 
+    #pragma warning(suppress : 4611)
     if (setjmp(png_jmpbuf(png_ptr)))
-      throw "Can't set png buffer, out of memory!";
+      throw "Can't set png jump buffer, out of memory!";
 
     png_init_io(png_ptr, fp);
     png_set_IHDR(png_ptr, info_ptr, bufferWidth, bufferHeight, 8,

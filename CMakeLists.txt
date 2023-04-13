@@ -16,6 +16,7 @@ project(cef)
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY OS_FOLDERS ON)
 
+set(CMAKE_CXX_STANDARD 20)
 
 #
 # CEF configuration.
@@ -135,8 +136,17 @@ if(NOT EXECUTE_RV STREQUAL "0")
   message(FATAL_ERROR "Execution failed with unexpected result: ${EXECUTE_RV}")
 endif()
 
-#set(YAML_BUILD_SHARED_LIBS ON CACHE BOOL "Build YAML Shared Libs")
+set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "Build YAML Shared Libs")
+set(PNG_SHARED OFF CACHE BOOL "" FORCE)
+set(PNG_STATIC ON CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE) # we only want lib
+set(PNG_TESTS OFF CACHE BOOL "" FORCE) # we only want lib
+ set(SKIP_INSTALL_ALL OFF CACHE BOOL "" FORCE) # we only want lib
+ set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 
+if(MSVC)
+    add_compile_options(/wd4251 /wd4275)
+endif()
 #
 # Target configuration.
 #
