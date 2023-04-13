@@ -2,7 +2,7 @@
 #include "include/cef_app.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
-//#include "libpng/png.h"
+#include "libpng/png.h"
 #include <filesystem>
 
 Arbiter::~Arbiter() {}
@@ -111,18 +111,39 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
         "[Arbiter] [%d] Converting from BGRA to RGBA and saving to png file...",
         browser->GetIdentifier(), state->currentUrl, supposedLength, length));
 
+    png_bytep* pngBuf = new png_bytep[bufferHeight];
 
+    for (int y = 0; y < bufferHeight; y++) {
+      png_bytep row = new png_byte[bufferWidth*4];
+      pngBuf[y] = row;
 
-    for (int x = 0; x < bufferWidth; x++) {
-      for (int y = 0; y < bufferHeight; y++) {
+      for (int x = 0; x < bufferWidth; x++) {
+        int i = x * 4;
         uint8_t blue = *(buffer++);
         uint8_t green = *(buffer++);
         uint8_t red = *(buffer++);
         uint8_t alpha = *(buffer++);
 
-        //INPUT INTO PNG LIBRARY
+        row[i] = red;
+        row[i + 1] = green;
+        row[i + 2] = blue;
+        row[i + 3] = alpha;
       }
     }
+
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+    if (!png_ptr) {
+      throw "Can't create png write context, out of memory!";
+    }
+
+    info_ptr = png_create_info_struct(png_ptr);
+
+    if (!info_ptr)
+      throw "Can't create png info context, out of memory!";
   }
 }
 
