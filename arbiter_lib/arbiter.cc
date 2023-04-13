@@ -131,6 +131,14 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
       }
     }
 
+    const char* filepath = std::string(this->dataDirPath)
+                                         .append("/")
+                                         .append(std::to_string(this->currentRun))
+                                         .append("/")
+                                         .append(state->currentUrl)
+                                         .append(".png").c_str();
+    png_FILE_p fp = fopen(filepath, "w");
+
     png_structp png_ptr;
     png_infop info_ptr;
 
@@ -144,6 +152,29 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
 
     if (!info_ptr)
       throw "Can't create png info context, out of memory!";
+
+    if (setjmp(png_jmpbuf(png_ptr)))
+      throw "Can't set png buffer, out of memory!";
+
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, bufferWidth, bufferHeight, 8,
+                 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+    png_write_info(png_ptr, info_ptr);
+
+    png_write_image(png_ptr, pngBuf);
+    png_write_end(png_ptr, info_ptr);
+
+    for (int y = 0; y < bufferHeight; y++) {
+      delete[] pngBuf[y];
+    }
+
+    delete[] pngBuf;
+
+    fclose(fp);
+
+    png_destroy_write_struct(&png_ptr, &info_ptr);
   }
 }
 
