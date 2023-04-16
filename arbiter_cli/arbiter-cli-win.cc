@@ -50,6 +50,10 @@ int main(int argc, char** argv) {
     ::Sleep(100);
   }
 #endif  // DEBUG
+  while (!IsDebuggerPresent()) {
+    DebugBreak();
+    ::Sleep(100);
+  }
 
   void* sandbox_info = nullptr;
 

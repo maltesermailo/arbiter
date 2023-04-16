@@ -10,7 +10,11 @@ Arbiter::~Arbiter() {}
 void Arbiter::ParseSpiderFile() {
   Log("Parsing spider file...");
 
-  this->spiderFile = YAML::LoadFile("spider.yaml");
+  try {
+    this->spiderFile = YAML::LoadFile("spider.yaml");
+  } catch (YAML::BadFile &e) {
+    Log(std::format("Can't parse spider file! %s", e.msg));
+  }
 
   YAML::Node pathsNode = this->spiderFile["paths"];
   YAML::const_iterator iter;
