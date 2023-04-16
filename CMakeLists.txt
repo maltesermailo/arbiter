@@ -16,8 +16,6 @@ project(cef)
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY OS_FOLDERS ON)
 
-set(CMAKE_CXX_STANDARD 20)
-
 #
 # CEF configuration.
 #
@@ -137,6 +135,7 @@ if(NOT EXECUTE_RV STREQUAL "0")
 endif()
 
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "Build YAML Shared Libs")
+set(YAML_MSVC_SHARED_RT OFF CACHE BOOL "Build YAML with Shared Runtime")
 set(PNG_SHARED OFF CACHE BOOL "" FORCE)
 set(PNG_STATIC ON CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE) # we only want lib
@@ -146,6 +145,8 @@ set(PNG_TESTS OFF CACHE BOOL "" FORCE) # we only want lib
 
 if(MSVC)
     add_compile_options(/wd4251 /wd4275)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message("CMAKE_MSVC = ${CMAKE_MSVC_RUNTIME_LIBRARY}")
 endif()
 #
 # Target configuration.
@@ -176,6 +177,11 @@ add_subdirectory(libpng)
 add_subdirectory(yaml-cpp)
 add_subdirectory(arbiter_lib)
 add_subdirectory(arbiter_cli)
+
+target_compile_definitions(yaml-cpp
+  PRIVATE
+    _HAS_ITERATOR_DEBUGGING=0
+    _ITERATOR_DEBUG_LEVEL=0)
 
 # Display configuration settings.
 PRINT_CEF_CONFIG()

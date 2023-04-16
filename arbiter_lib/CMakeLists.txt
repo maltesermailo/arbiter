@@ -83,6 +83,9 @@ else()
   ADD_LOGICAL_TARGET("libcef_lib" "${CEF_LIB_DEBUG}" "${CEF_LIB_RELEASE}")
 endif()
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+
 include_directories("../yaml-cpp/include")
 
 # Determine the target output directory.
@@ -235,7 +238,13 @@ if(OS_WINDOWS)
   add_dependencies(${CEF_TARGET} png_static)
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   target_compile_options(${CEF_TARGET} PUBLIC "/EHsc")
+  target_compile_features(${CEF_TARGET} PRIVATE cxx_std_20)
+  target_compile_definitions(${CEF_TARGET} PRIVATE $<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>)
+  target_compile_definitions(${CEF_TARGET} PRIVATE $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
   target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper yaml-cpp png_static ${CEF_STANDARD_LIBS})
+
+  set_property(TARGET ${CEF_TARGET} PROPERTY
+             MSVC_RUNTIME_LIBRARY MultiThreadedDebug)
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.
