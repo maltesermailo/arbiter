@@ -66,8 +66,6 @@ class Arbiter {
 };
 
 // Global Instance
-namespace {
-std::shared_ptr<Arbiter> g_Arbiter;
-}
+extern std::shared_ptr<Arbiter> g_Arbiter;
 
 #endif

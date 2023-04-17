@@ -101,11 +101,12 @@ void SimpleApp::OnContextInitialized() {
 
   //Create browser-global Arbiter instance
   g_Arbiter = make_shared<Arbiter>();
-  g_Arbiter->ParseSpiderFile();
 
-  std::string dataDir;
-  std::string lastRunParam;
-  std::string threadsParam;
+  Arbiter::GetInstance()->ParseSpiderFile();
+
+  CefString dataDir;
+  CefString lastRunParam;
+  CefString threadsParam;
 
   dataDir = command_line->GetSwitchValue("data-dir");
   if (dataDir.empty()) {
@@ -122,7 +123,7 @@ void SimpleApp::OnContextInitialized() {
     Arbiter::GetInstance()->Log("No last run specified with --last-run, generating new screenshots without comparison. Example: --last-run=1");
   } else {
     try {
-      //lastRun = stoi(lastRunParam);
+      lastRun = stoi(lastRunParam.ToString());
     } catch (const std::invalid_argument& e) {
       UNREFERENCED_PARAMETER(e);
       Arbiter::GetInstance()->Log("Last run is not an integer!");
@@ -144,7 +145,7 @@ void SimpleApp::OnContextInitialized() {
         "No thread count specified, using 4");
   } else {
     try {
-      threads = stoi(threadsParam);
+      threads = stoi(threadsParam.ToString());
     } catch (const std::invalid_argument& e) {
       UNREFERENCED_PARAMETER(e);
       Arbiter::GetInstance()->Log("Threads is not an integer!");
@@ -155,11 +156,16 @@ void SimpleApp::OnContextInitialized() {
     }
   }
 
+  std::string data = dataDir.ToString();
+
   //Setup Data Directory
   try {
-    Arbiter::GetInstance()->PrepareData(dataDir, lastRun);
+    Arbiter::GetInstance()->PrepareData(data, lastRun);
   } catch (const std::string& e) {
     Arbiter::GetInstance()->Log(e.c_str());
+    CefShutdown();
+    std::exit(-1);
+    return;
   }
 
   // SimpleHandler implements browser-level callbacks.

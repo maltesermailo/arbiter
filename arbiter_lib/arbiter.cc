@@ -5,7 +5,11 @@
 #include "libpng/png.h"
 #include <filesystem>
 
-Arbiter::~Arbiter() {}
+std::shared_ptr<Arbiter> g_Arbiter;
+
+Arbiter::~Arbiter() {
+  std::cout << "DESTRUCTOR" << endl;
+}
 
 void Arbiter::ParseSpiderFile() {
   Log("Parsing spider file...");
@@ -20,18 +24,22 @@ void Arbiter::ParseSpiderFile() {
   YAML::const_iterator iter;
 
   Log(std::format(
-      "[Arbiter] Loading %d urls...",
+      "[Arbiter] Loading {} urls...",
       pathsNode.size()));
 
   for (iter = pathsNode.begin(); iter != pathsNode.end(); ++iter) {
     std::string url = iter->as<std::string>();
 
-    Log(std::format("[Arbiter] Adding %s...", url));
+    Log(std::format("[Arbiter] Adding {}...", url));
     this->AddURL(url);
   }
+
+  g_Arbiter->Log("Test");
 }
 
 void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
+  __noop;
+
   this->dataDirPath = dataDirIn;
 
   if (!std::filesystem::exists(dataDirIn)) {
@@ -103,21 +111,21 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
   if (length > 0) {
     if (bufferWidth != state->GetWidth() || bufferHeight != state->GetHeight()) {
       this->Log(std::format(
-          "[Arbiter] [%d] Screenshot of url %s hasn't got proper width and "
-          "height. Should be: %d x %d pixels, Is: %d x %d pixels",
+          "[Arbiter] [{}] Screenshot of url {} hasn't got proper width and "
+          "height. Should be: {} x {} pixels, Is: {} x {} pixels",
           browser->GetIdentifier(), state->currentUrl, bufferWidth,
           bufferHeight, state->GetWidth(), state->GetHeight()));
     }
 
     if (supposedLength != length) {
       this->Log(std::format(
-          "[Arbiter] [%d] Screenshot of url %s hasn't got proper size. Should be: %d bytes, Is: %d bytes",
+          "[Arbiter] [{}] Screenshot of url {} hasn't got proper size. Should be: {} bytes, Is: {} bytes",
           browser->GetIdentifier(), state->currentUrl, supposedLength, length));
     }
 
     this->Log(std::format(
-        "[Arbiter] [%d] Converting from BGRA to RGBA and saving to png file...",
-        browser->GetIdentifier(), state->currentUrl, supposedLength, length));
+        "[Arbiter] [{}] Converting from BGRA to RGBA and saving to png file...",
+        browser->GetIdentifier()));
 
     png_bytep* pngBuf = new png_bytep[bufferHeight];
 
@@ -152,7 +160,7 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
     png_FILE_p fp = fopen(filepath, "w");
 
     this->Log(std::format(
-        "[Arbiter] [%d] Writing to path: %s", browser->GetIdentifier(),
+        "[Arbiter] [{}] Writing to path: {}", browser->GetIdentifier(),
         filepath));
 
     png_structp png_ptr;
@@ -209,13 +217,13 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
   this->browserStates[browser->GetIdentifier()] = state;
 
   Arbiter::GetInstance()->Log(
-      std::format("[Arbiter] [%d] Starting...", browser->GetIdentifier()));
+      std::format("[Arbiter] [{}] Starting...", browser->GetIdentifier()));
 
   while (!this->toBeDone.empty()) {
     std::string url;
 
     Arbiter::GetInstance()->Log(
-        std::format("[Arbiter] [%d] Getting next url", browser->GetIdentifier()));
+        std::format("[Arbiter] [{}] Getting next url", browser->GetIdentifier()));
 
     try {
       //Acquire queue lock
@@ -236,7 +244,7 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
     //If url is empty, toBeDone is empty
     if (!url.empty()) {
       Arbiter::GetInstance()->Log(
-          std::format("[Arbiter] [%d] Loading url %s...", browser->GetIdentifier(), url));
+          std::format("[Arbiter] [{}] Loading url {}...", browser->GetIdentifier(), url));
       browser->GetMainFrame()->LoadURL(url);
 
       state->currentUrl = url;
@@ -246,12 +254,12 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
       //If page didnt load, continue with next one, else take screenshot
       if (state->_error) {
         Arbiter::GetInstance()->Log(std::format(
-            "[Arbiter] [%d] Warning: Page %s didn't load properly! Skipping...", browser->GetIdentifier(), url));
+            "[Arbiter] [{}] Warning: Page {} didn't load properly! Skipping...", browser->GetIdentifier(), url));
         continue;
       }
 
       Arbiter::GetInstance()->Log(std::format(
-          "[Arbiter] [%d] Creating screenshot for %s...", browser->GetIdentifier(), url));
+          "[Arbiter] [{}] Creating screenshot for {}...", browser->GetIdentifier(), url));
 
       //Take screenshot
       this->TakeScreenshot(browser, state);
@@ -275,5 +283,9 @@ BrowserStateList Arbiter::getStateList() {
 }
 
 std::shared_ptr<Arbiter> Arbiter::GetInstance() {
-  return std::move(g_Arbiter);
+  if (g_Arbiter == nullptr) {
+    g_Arbiter = make_shared<Arbiter>();
+  }
+
+  return g_Arbiter;
 }

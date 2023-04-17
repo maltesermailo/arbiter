@@ -60,6 +60,9 @@ set(ARBITER_CLI_RESOURCES_SRCS
 # Shared configuration.
 #
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+
 # Target executable names.
 set(CEF_TARGET "arbiter-cli")
 if(OS_MAC)
