@@ -19,7 +19,7 @@ class SimpleApp : public CefApp, public CefBrowserProcessHandler {
   }
 
   CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
-    return new SimpleRenderHandler();
+    return SimpleRenderHandler::GetInstance();
   }
 
   void OnRegisterCustomSchemes(

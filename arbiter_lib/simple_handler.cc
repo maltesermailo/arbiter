@@ -155,6 +155,15 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
   if (frame->IsMain()) {
       BrowserStateList stateList = Arbiter::GetInstance()->getStateList();
       if (stateList.contains(browser->GetIdentifier())) {
+          if (httpStatusCode == 0) {
+              return;
+          }
+
+          Arbiter::GetInstance()->Log(
+          std::format("[Arbiter] [{}] URL {} finished loading with status code {}",
+          browser->GetIdentifier(), frame->GetURL().ToString(),
+          httpStatusCode));
+
           std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
           state->_error = false;
 

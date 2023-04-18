@@ -22,9 +22,9 @@ class BrowserState {
 
   std::string currentUrl;
   //Notification semaphore for JS execution
-  std::binary_semaphore notify = std::binary_semaphore(1);
+  std::binary_semaphore notify = std::binary_semaphore(0);
   //Notification semaphore for Page Load
-  std::binary_semaphore notifyLoad = std::binary_semaphore(1);
+  std::binary_semaphore notifyLoad = std::binary_semaphore(0);
 
   bool _error = false;
 

@@ -60,6 +60,8 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
            << ".png has no screenshot. A new screenshot will be taken and "
               "saved but not compared" << endl;
     }
+
+    this->toBeDone.push(url);
   }
 
   this->lastRun = lastRunIn;
