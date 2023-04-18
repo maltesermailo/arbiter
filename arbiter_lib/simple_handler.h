@@ -32,6 +32,7 @@ class SimpleHandler : public CefClient,
     return this;
   }
   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
+  virtual CefRefPtr<CefRenderHandler> GetRenderHandler() { return this; }
   bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 CefProcessId source_process,

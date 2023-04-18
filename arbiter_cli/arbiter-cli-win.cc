@@ -44,6 +44,8 @@ int main(int argc, char** argv) {
   // Enable High-DPI support on Windows 7 or newer.
   CefEnableHighDPISupport();
 
+  std::cout << "Waiting for Debugger..." << std::endl;
+
   //Wait for Debugger
 #ifdef DEBUG
   while (!IsDebuggerPresent()) {
@@ -52,7 +54,7 @@ int main(int argc, char** argv) {
   }
 #endif  // DEBUG
   while (!IsDebuggerPresent()) {
-    DebugBreak();
+    //DebugBreak();
     ::Sleep(100);
   }
 
@@ -83,6 +85,9 @@ int main(int argc, char** argv) {
 
   // Specify CEF global settings here.
   CefSettings settings;
+  settings.windowless_rendering_enabled = true;
+  CefString(&settings.cache_path).FromString("");
+  CefString(&settings.root_cache_path).FromString("");
 
   if (command_line->HasSwitch("enable-chrome-runtime")) {
     // Enable experimental Chrome runtime. See issue #2969 for details.

@@ -13,6 +13,7 @@
 #include "simple_app.h"
 #include "client_scheme_handler.h"
 #include "arbiter.h"
+#include <format>
 
 namespace {
 
@@ -102,7 +103,22 @@ void SimpleApp::OnContextInitialized() {
   //Create browser-global Arbiter instance
   g_Arbiter = make_shared<Arbiter>();
 
-  Arbiter::GetInstance()->ParseSpiderFile();
+  try {
+    Arbiter::GetInstance()->ParseSpiderFile();
+  } catch (YAML::BadFile& e) {
+    Arbiter::GetInstance()->Log(std::format("Can't parse spider file! {}", e.msg));
+
+    CefShutdown();
+    std::exit(-1);
+    return;
+  } catch (string& e) {
+   Arbiter::GetInstance()->Log(
+        std::format("{}", e));
+
+    CefShutdown();
+    std::exit(-1);
+    return;
+  }
 
   CefString dataDir;
   CefString lastRunParam;

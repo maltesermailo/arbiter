@@ -230,11 +230,11 @@ if(OS_WINDOWS)
              MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   add_compile_definitions(CONSOLE_APP)
 
-  target_compile_definitions(${CEF_TARGET}
-    PRIVATE
+  #target_compile_definitions(${CEF_TARGET}
+  #  PRIVATE
         # If the debug configuration pass the DEBUG define to the compiler 
-        $<$<CONFIG:Debug>:-DDEBUG>>
-   )
+  #      $<$<CONFIG:Debug>:DEBUG>>
+  #)
 
    target_compile_options(${CEF_TARGET} PRIVATE /wd4251)
 

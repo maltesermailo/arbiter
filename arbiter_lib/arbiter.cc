@@ -4,6 +4,7 @@
 #include "include/wrapper/cef_helpers.h"
 #include "libpng/png.h"
 #include <filesystem>
+#include <algorithm>
 
 std::shared_ptr<Arbiter> g_Arbiter;
 
@@ -14,11 +15,7 @@ Arbiter::~Arbiter() {
 void Arbiter::ParseSpiderFile() {
   Log("Parsing spider file...");
 
-  try {
-    this->spiderFile = YAML::LoadFile("spider.yaml");
-  } catch (YAML::BadFile &e) {
-    Log(std::format("Can't parse spider file! {}", e.msg));
-  }
+  this->spiderFile = YAML::LoadFile("spider.yaml");
 
   YAML::Node pathsNode = this->spiderFile["paths"];
   YAML::const_iterator iter;
@@ -34,12 +31,12 @@ void Arbiter::ParseSpiderFile() {
     this->AddURL(url);
   }
 
-  g_Arbiter->Log("Test");
+  if (this->urls.size() == 0) {
+    throw "No urls found, won't continue!";
+  }
 }
 
 void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
-  __noop;
-
   this->dataDirPath = dataDirIn;
 
   if (!std::filesystem::exists(dataDirIn)) {
@@ -47,9 +44,9 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
   }
 
   for (auto const& url : this->urls) {
-    //Sanitized url for filesystem since / are not allowed
-    std::string urlSanitized = url;
-    urlSanitized.replace(url.begin(), url.end(), '/', '_');
+   //Sanitized url for filesystem since / are not allowed
+   std::string urlSanitized = std::string(url);
+   std::replace(urlSanitized.begin(), urlSanitized.end(), '/', '_');
 
     std::filesystem::path filepath = std::string(dataDirIn)
                                          .append("/")
@@ -73,8 +70,7 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
               .append("/")
               .append(std::to_string(this->currentRun))
               .append("/"))) {
-    throw "Can't create data directory at path " + dataDirIn + "/" +
-        std::to_string(this->currentRun);
+    
   }
 }
 
@@ -265,6 +261,8 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
       this->TakeScreenshot(browser, state);
     }
   }
+
+  browser->GetHost()->CloseBrowser(false);
 }
 
 void Arbiter::Log(const char* str) {

@@ -26,7 +26,7 @@ bool ClientRequestHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefP
         throw "No Such File";
     }
   } else if (strstr(url.c_str(), NULL_FILE_NAME) != nullptr) {
-    data_ = "";
+    data_ = "null";
     mime_type_ = "text/html";
     handled = true;
   }
