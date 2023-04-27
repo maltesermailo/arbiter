@@ -82,6 +82,13 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
   browser->GetMainFrame()->SendProcessMessage(PID_RENDERER, message);
 
   state->notify.acquire();
+  
+  if (state->_error) {
+    this->Log(std::format(
+        "[Arbiter] [{}] Error while trying to execute resize javascript.",
+        browser->GetIdentifier()));
+    return;
+  }
 
   //If last load timer is higher than 5 seconds, dont continue and wait a second, a picture or JS script might have not finished loading
   while ((std::chrono::system_clock::now().time_since_epoch().count() - state->lastLoadTimeMillis) < 5000) {
@@ -91,8 +98,11 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
   // DEBUG: Wait till loading is finished
   std::this_thread::sleep_for(std::chrono::seconds(20));
 
+  state->SetScreenshotDone(false);
+
   //Resize browser and start paint process
   browser->GetHost()->WasResized();
+  browser->GetHost()->Invalidate(PET_VIEW);
 
   while (!state->IsScreenshotDone()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -146,8 +156,8 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
     }
 
     // Sanitized url for filesystem since / are not allowed
-    std::string urlSanitized = state->currentUrl;
-    urlSanitized.replace(urlSanitized.begin(), urlSanitized.end(), '/', '_');
+    std::string urlSanitized = std::string(state->currentUrl);
+    std::replace(urlSanitized.begin(), urlSanitized.end(), '/', '_');
 
     const char* filepath = std::string(this->dataDirPath)
                                          .append("/")
@@ -210,7 +220,7 @@ void Arbiter::Run(CefRefPtr<CefBrowser> browser) {
   state
       ->SetScreenshotDone(false);
   state
-      ->SetDimensions(1920, 8640);
+      ->SetDimensions(1920, 1080);
 
   this->browserStates[browser->GetIdentifier()] = state;
 

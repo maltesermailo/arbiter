@@ -159,6 +159,11 @@ void SimpleHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
               return;
           }
 
+          if (frame->GetURL().ToString().find("client://ui/null") !=
+              std::string::npos) {
+              return;
+          }
+
           Arbiter::GetInstance()->Log(
           std::format("[Arbiter] [{}] URL {} finished loading with status code {}",
           browser->GetIdentifier(), frame->GetURL().ToString(),
@@ -188,10 +193,22 @@ bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
       if (stateList.contains(browser->GetIdentifier())) {
           std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
 
+          if (!message->GetArgumentList()->GetBool(1)) {
+              state->_error = true;
+
+              std::string errorMsg = message->GetArgumentList()->GetString(2).ToString();
+
+              Arbiter::GetInstance()->Log(
+                  std::format("[Arbiter] [{}] Error while trying to execute "
+                              "resize javascript. Error: ",
+                              browser->GetIdentifier(), errorMsg)
+                      .c_str());
+          }
+
           state->notify.release();
       } else {
           Arbiter::GetInstance()->Log(
-              std::format("Unknown instance %d detected. Instance "
+              std::format("Unknown instance {} detected. Instance "
                                       "won't continue loading!",
                           browser->GetIdentifier())
                   .c_str());
@@ -249,7 +266,7 @@ void SimpleHandler::GetViewRect(CefRefPtr<CefBrowser> browser,
     cefRect.height = state->GetHeight();
   } else {
     cefRect.width = 1920;
-    cefRect.height = 8640;
+    cefRect.height = 1080;
   }
 }
 
@@ -265,7 +282,10 @@ void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,
   if (stateList.contains(browser->GetIdentifier())) {
     std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
 
+    std::cout << "URL: " << browser->GetMainFrame()->GetURL().ToString();
+
     state->SetBuffer(buffer, length, width, height);
+    state->SetScreenshotDone(true);
   }
 }
 

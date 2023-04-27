@@ -1,4 +1,5 @@
 #include "simple_render_handler.h"
+#include <iostream>
 
 namespace {
 SimpleRenderHandler* g_instance = nullptr;
@@ -32,9 +33,13 @@ bool SimpleRenderHandler::OnProcessMessageReceived(
           CefRefPtr<CefV8Value> retval;
           CefRefPtr<CefV8Exception> exception;
 
-          //browser->GetMainFrame()->GetV8Context()->Enter();
+          std::cout << "IsInContext: " << CefV8Context::InContext()
+                    << std::endl;
+
+          CefRefPtr<CefV8Context> context = browser->GetMainFrame()->GetV8Context();
+          context->Enter();
           if (browser->GetMainFrame()->GetV8Context()->Eval(
-                  "return Math.max(document.body.scrollWidth, "
+                  "Math.max(document.body.scrollWidth, "
                   "document.body.offsetWidth, "
                   "document.documentElement.clientWidth, "
                   "document.documentElement.scrollWidth, "
@@ -49,14 +54,19 @@ bool SimpleRenderHandler::OnProcessMessageReceived(
             arguments->SetString(2, exception->GetMessageW());
             arguments->SetInt(3, browser->GetIdentifier());
 
+            std::cout << "Error: " << exception->GetMessageW() << std::endl;
+            std::cout << "Error: " << exception << std::endl;
+
             browser->GetMainFrame()->SendProcessMessage(PID_BROWSER,
                                                         procMessage);
+
+            context->Exit();
 
             return true;
           }
 
           if (browser->GetMainFrame()->GetV8Context()->Eval(
-                  "return Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);",
+                  "Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);",
                   "display.js", 1, retval, exception)) {
             height = retval->GetIntValue();
           } else {
@@ -69,6 +79,7 @@ bool SimpleRenderHandler::OnProcessMessageReceived(
 
             browser->GetMainFrame()->SendProcessMessage(PID_BROWSER,
                                                         procMessage);
+            context->Exit();
 
             return true;
           }
@@ -82,6 +93,7 @@ bool SimpleRenderHandler::OnProcessMessageReceived(
           arguments->SetInt(4, height);
 
           browser->GetMainFrame()->SendProcessMessage(PID_BROWSER, procMessage);
+          context->Exit();
 
           return true;
         }
