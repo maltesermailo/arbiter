@@ -13,6 +13,10 @@ SimpleRenderHandler::~SimpleRenderHandler() {
 }
 
 SimpleRenderHandler* SimpleRenderHandler::GetInstance() {
+    if (g_instance == nullptr) {
+        new SimpleRenderHandler();
+    }
+
 	return g_instance;
 }
 
@@ -28,7 +32,7 @@ bool SimpleRenderHandler::OnProcessMessageReceived(
           CefRefPtr<CefV8Value> retval;
           CefRefPtr<CefV8Exception> exception;
 
-          browser->GetMainFrame()->GetV8Context()->Enter();
+          //browser->GetMainFrame()->GetV8Context()->Enter();
           if (browser->GetMainFrame()->GetV8Context()->Eval(
                   "return Math.max(document.body.scrollWidth, "
                   "document.body.offsetWidth, "
