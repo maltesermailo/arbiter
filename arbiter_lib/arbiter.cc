@@ -8,6 +8,9 @@
 
 std::shared_ptr<Arbiter> g_Arbiter;
 
+
+
+
 Arbiter::~Arbiter() {
   std::cout << "DESTRUCTOR" << endl;
 }
@@ -76,6 +79,89 @@ void Arbiter::PrepareData(std::string dataDirIn, int lastRunIn) {
   }
 }
 
+void PrintPicture(uint8_t* buffer, int bufferWidth, int bufferHeight, size_t length) {
+  static int picture = 0;
+
+  if (length > 0) {
+    std::string filePathtxt = std::string("tempfile")
+                               .append(std::to_string(++picture))
+                               .append(".txt");
+
+    png_bytep* pngBuf = new png_bytep[bufferHeight];
+
+    std::ofstream out;
+    out.open(filePathtxt);
+
+    for (int y = 0; y < bufferHeight; y++) {
+      png_bytep row = new png_byte[bufferWidth * 4];
+      pngBuf[y] = row;
+
+      for (int x = 0; x < bufferWidth; x++) {
+        int i = x * 4;
+        int yI = y * bufferWidth * 4;
+        uint8_t blue = buffer[yI + i];
+        uint8_t green = buffer[yI + i + 1];
+        uint8_t red = buffer[yI + i + 2];
+        uint8_t alpha = buffer[yI + i + 3];
+
+        out << std::to_string(red) << "," << std::to_string(green) << ","
+            << std::to_string(blue) << "," << std::to_string(alpha) << std::endl;
+
+        row[i] = red;
+        row[i + 1] = green;
+        row[i + 2] = blue;
+        row[i + 3] = alpha;
+      }
+    }
+
+    std::string filePath = std::string("tempfile").append(std::to_string(++picture)).append(".png");
+
+    png_FILE_p fp = fopen(filePath.c_str(), "wb");
+
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+    if (!png_ptr) {
+      throw "Can't create png write context, out of memory!";
+    }
+
+    info_ptr = png_create_info_struct(png_ptr);
+
+    if (!info_ptr)
+      throw "Can't create png info context, out of memory!";
+
+#pragma warning(suppress : 4611)
+    if (setjmp(png_jmpbuf(png_ptr)))
+      throw "Can't set png jump buffer, out of memory!";
+
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, bufferWidth, bufferHeight, 8,
+                 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+    png_set_rows(png_ptr, info_ptr, pngBuf);
+
+    /* png_write_info(png_ptr, info_ptr);
+
+    png_write_image(png_ptr, pngBuf);
+    png_write_end(png_ptr, info_ptr);*/
+
+    png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+    for (int y = 0; y < bufferHeight; y++) {
+      delete[] pngBuf[y];
+    }
+
+    delete[] pngBuf;
+
+    fclose(fp);
+
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+  }
+}
+
 void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<BrowserState> state) {
   CefRefPtr<CefProcessMessage> message =
       CefProcessMessage::Create("GET_DIMENSIONS");
@@ -96,13 +182,13 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
   }
 
   // DEBUG: Wait till loading is finished
-  std::this_thread::sleep_for(std::chrono::seconds(20));
+  std::this_thread::sleep_for(std::chrono::seconds(2));
 
   state->SetScreenshotDone(false);
 
   //Resize browser and start paint process
-  browser->GetHost()->WasResized();
   browser->GetHost()->Invalidate(PET_VIEW);
+  browser->GetHost()->WasResized();
 
   while (!state->IsScreenshotDone()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -143,10 +229,11 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
 
       for (int x = 0; x < bufferWidth; x++) {
         int i = x * 4;
-        uint8_t blue = *(buffer++);
-        uint8_t green = *(buffer++);
-        uint8_t red = *(buffer++);
-        uint8_t alpha = *(buffer++);
+        int yI = y * bufferWidth * 4;
+        uint8_t blue = buffer[yI + i];
+        uint8_t green = buffer[yI + i + 1];
+        uint8_t red = buffer[yI + i + 2];
+        uint8_t alpha = buffer[yI + i + 3];
 
         row[i] = red;
         row[i + 1] = green;
@@ -158,18 +245,19 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
     // Sanitized url for filesystem since / are not allowed
     std::string urlSanitized = std::string(state->currentUrl);
     std::replace(urlSanitized.begin(), urlSanitized.end(), '/', '_');
+    std::replace(urlSanitized.begin(), urlSanitized.end(), ':', '-');
 
-    const char* filepath = std::string(this->dataDirPath)
-                                         .append("/")
-                                         .append(std::to_string(this->currentRun))
-                                         .append("/")
-                                         .append(urlSanitized)
-                                         .append(".png").c_str();
-    png_FILE_p fp = fopen(filepath, "w");
+    std::string filePath = std::string(this->dataDirPath)
+                               .append("/")
+                               .append(std::to_string(this->currentRun))
+                               .append("/")
+                               .append(urlSanitized)
+                               .append(".png");
+
+    png_FILE_p fp = fopen(filePath.c_str(), "wb");
 
     this->Log(std::format(
-        "[Arbiter] [{}] Writing to path: {}", browser->GetIdentifier(),
-        filepath));
+        "[Arbiter] [{}] Writing to path: {}", browser->GetIdentifier(), filePath));
 
     png_structp png_ptr;
     png_infop info_ptr;
@@ -194,10 +282,14 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
                  PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-    png_write_info(png_ptr, info_ptr);
+    png_set_rows(png_ptr, info_ptr, pngBuf);
+
+    /* png_write_info(png_ptr, info_ptr);
 
     png_write_image(png_ptr, pngBuf);
-    png_write_end(png_ptr, info_ptr);
+    png_write_end(png_ptr, info_ptr);*/
+
+    png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
     for (int y = 0; y < bufferHeight; y++) {
       delete[] pngBuf[y];
@@ -209,6 +301,8 @@ void Arbiter::TakeScreenshot(CefRefPtr<CefBrowser> browser, std::shared_ptr<Brow
 
     png_destroy_write_struct(&png_ptr, &info_ptr);
   }
+
+  state->SetScreenshotDone(false);
 }
 
 void Arbiter::AddURL(std::string url) {

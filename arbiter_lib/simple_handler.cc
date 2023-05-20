@@ -282,9 +282,14 @@ void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,
   if (stateList.contains(browser->GetIdentifier())) {
     std::shared_ptr<BrowserState> state = stateList[browser->GetIdentifier()];
 
-    std::cout << "URL: " << browser->GetMainFrame()->GetURL().ToString();
+    uint8_t* newBuffer = new uint8_t[length];
+    std::memcpy(newBuffer, buffer, length);
 
-    state->SetBuffer(buffer, length, width, height);
+    std::cout << "URL: " << browser->GetMainFrame()->GetURL().ToString() << std::endl;
+
+    PrintPicture(newBuffer, width, height, length);
+
+    state->SetBuffer(newBuffer, length, width, height);
     state->SetScreenshotDone(true);
   }
 }

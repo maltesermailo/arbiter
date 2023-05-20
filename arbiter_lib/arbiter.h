@@ -16,6 +16,11 @@ using namespace std;
 
 typedef std::map<int, shared_ptr<BrowserState>> BrowserStateList;
 
+void PrintPicture(uint8_t* buffer,
+                  int bufferWidth,
+                  int bufferHeight,
+                  size_t length);
+
 class Arbiter {
  public:
   Arbiter() : lastRun(0), currentRun(0) { 

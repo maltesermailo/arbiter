@@ -17,8 +17,9 @@ class BrowserState {
 
   void SetScreenshotDone(bool value);
   void SetDimensions(int width, int height);
-  void SetBuffer(const void* data, size_t length, int width, int height);
-  const void* GetBuffer(size_t& length, int& width, int& height);
+  void SetBuffer(void* data, size_t length, int width, int height);
+  void ClearBuffer();
+  void* GetBuffer(size_t& length, int& width, int& height);
 
   std::string currentUrl;
   //Notification semaphore for JS execution
@@ -41,7 +42,7 @@ class BrowserState {
   int bufferWidth;
   int bufferHeight;
 
-  const void* buffer;
+  void* buffer;
   size_t bufferLength;
 };
 
